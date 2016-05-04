@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <title>HTMLのテストページ</title>
-
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
 <body>
 
@@ -64,10 +64,12 @@ var landplaycounter = 0;
 var l = cards.length;
 var handnumber = 0;
 var marigancounter = 0;
+var land_manage = [];
 var step = "";
 
 var go_to_nextstep = function(steptype){
   if(step == "stage0"){
+    land_manage_format();
     $("#life").append("<font size = '3'>life:"+life+"</font><br>");
   
   }
@@ -102,6 +104,7 @@ var next_turn = function(steptype){
   for(var i=0;i<=landnum;i++){
       untap_it("my_land",i);
   }
+  land_manage_format();
   landplaycounter ++;
   display_mana();
   draw_card("my");
@@ -117,6 +120,11 @@ var start_hand = function(my_or_op){
     step = "stage0"
 };
 
+var land_manage_format = function(){
+  for(var i=0;i<landnum+1;i++){
+    land_manage[i] = 0;
+  }
+};
 var socery_playable = function(steptype){
   if((steptype =="stage0") || (steptype =="upkeep") || (steptype == "selectattacker") || (steptype == "selectdefender")
     || (steptype == "distribution") || (steptype == "endstep")){
@@ -126,6 +134,39 @@ var socery_playable = function(steptype){
     return 1;
   }
 }
+var play_land = function(char,cardname){
+  $("#"+char+"_land img").eq(landnum).click(function(){
+    var index2 = $("#"+char+"_land img").index(this);
+    tap_it(""+char+"_land",index2);
+    if(land_manage[index2]==0 ){
+      void_mana ++;
+      add_mana(cards[i]);
+      land_manage[index2] = 1;
+    }else{
+      console.log("already_tapped");
+    }
+  });
+  handnumber--;
+  landnum ++;
+  landplaycounter --;
+};
+
+var play_creature = function(char,cardname){
+  $("#"+char+"_creature img").eq(creaturenum).click(function(){
+    var index2 = $("#"+char+"_creature img").index(this);
+    if(step == "selectattacker"){
+    tap_it(""+char+"_creature",index2);
+    attacker.push(cards[i]);
+  }else{
+    console.log("no mean select");
+  }
+});
+  handnumber--;
+  creaturenum ++;
+  void_mana = void_mana - cards[i].manacost;
+  display_mana();
+};
+
 var information = function(){
   console.log("mana="+void_mana);
   console.log("hand="+handnumber);
@@ -173,18 +214,11 @@ var draw_card = function(my_or_op){
         for(i = 0;i<6;i++){
           if($("#"+char+"_hand img").eq(index).attr("name") == cards[i].name){
             if(cards[i].attr == "land"){  
-              if(landplaycounter >= 1){         
-                append_to_card("my_land",cards[i]);
+              if(landplaycounter >= 1){
+                append_to_card(char+"_land",cards[i]);
                 $("#"+char+"_hand img").eq(index).remove();
-                $("#"+char+"_land img").eq(landnum).click(function(){
-                  var index2 = $("#"+char+"_land img").index(this);
-                  tap_it(""+char+"_land",index2);
-                  void_mana ++;
-                  add_mana(cards[i]);
-                });
-                handnumber--;
-                landnum ++;
-                landplaycounter --;
+                play_land("my",cards[i]);       
+                
               }
               break;
             }
@@ -192,20 +226,7 @@ var draw_card = function(my_or_op){
               if(void_mana >= cards[i].manacost){                
                 append_to_card(""+char+"_creature",cards[i]);
                 $("#"+char+"_hand img").eq(index).remove();
-                $("#"+char+"_creature img").eq(creaturenum).click(function(){
-                  var index2 = $("#"+char+"_creature img").index(this);
-                  if(step == "selectattacker"){
-                    tap_it(""+char+"_creature",index2);
-                    attacker.push(cards[i]);
-                  }else{
-                    console.log("no mean select");
-                  }
-
-                });
-                handnumber--;
-                creaturenum ++;
-                void_mana = void_mana - cards[i].manacost;
-                display_mana();
+                play_creature("my",cards[i]);
                 break;
               }else{
                 console.log("not enough mana");
