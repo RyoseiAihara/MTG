@@ -3,22 +3,6 @@
 //グローバル変数,配列,オブジェクトなど
 //
 //
-var my_hand_cards = [];
-var op_hand_cards = [];
-var life = 20;
-var my_turn = 0;
-var attacker = [];
-var stack = [];
-var void_mana = 0;
-var creaturenum = 0;
-var landnum = 0;
-var landplaycounter = 0;
-var l = cards.length;
-var handnumber = 0;
-var marigancounter = 0;
-var land_manage = [];
-var step = "";
-
 var Card = function() {
   this.name = "";
   this.attr = "";
@@ -27,7 +11,6 @@ var Card = function() {
   this.manacost = null;
   this.src = "";
 }
-
 var cards = []; //SQLで実装したい
 for(var i= 0;i < 6;i++){
   cards[i] = new Card();
@@ -41,6 +24,27 @@ for(var i= 0;i < 6;i++){
     cards[i].attr = "land";
   }
 }
+var my_hand_cards = [];
+var op_hand_cards = [];
+var life = 20;
+var my_turn = 0;
+var attacker = [];
+var stack = [];
+var void_mana = 0;
+var op_void_mana = 0;
+var creaturenum = 0;
+var landnum = 0;
+var op_land_num = 0;
+var landplaycounter = 0;
+var l = cards.length;
+var handnumber = 0;
+var marigancounter = 0;
+var land_manage = [];
+var step = "";
+
+
+
+
 
 var cpu = function(){
   this.life_evalurate = 0;
@@ -77,10 +81,10 @@ var socery_playable = function(steptype){
 //
 //
 
-var op_can_cast_land = function(){
+var op_can_cast_cards = function(cardtype){
   
   for(var i=0;i<6;i++){
-    if(op_hand_cards[i].attr == "land"){
+    if(op_hand_cards[i].attr == cardtype){
       return i;
     }
   }
@@ -93,6 +97,12 @@ var op_cast_land = function(num){
   op_hand_cards.splice(num,1);
 }
 
+var op_cast_creature = function(num){
+  op_void_mana = op_void_mana - $("#op_hand img").eq(num).manacost;
+  append_to_card("op_creature",op_hand_cards[num]);
+  $("#op_hand img").eq(num).remove();
+  op_hand_cards.splice(num,1);
+};
 
 var op_turn = function(){
   step = "op_upkeep";
@@ -103,13 +113,23 @@ var op_turn = function(){
   step = "op_main1";
   update_display("turntable");
 
-  if(op_can_cast_land() != -1){
-    console.log(op_can_cast_land());
-    op_cast_land(op_can_cast_land());
+  console.log("op_hand");
+  for(var i=0;i<op_hand_cards.length;i++){
+    console.log("index:"+op_hand_cards[i].attr+":"+op_hand_cards[i].manacost);
+  }
+  if(op_can_cast_cards("land") != -1){
+    console.log("land index:"+op_can_cast_cards("land"));
+    op_cast_land(op_can_cast_cards("land"));
   }
 
-  if()
-
+  for(var i=0;i<op_land_num;i++){
+    tap_it("op_land",i);
+    op_void_mana ++;
+  }
+  if(op_can_cast_cards("creature") != -1){
+    console.log("creature index:"+op_can_cast_cards("creature"));
+    op_cast_creature(op_can_cast_cards("creature"));
+  }
 
   step = "op_endstep";
   update_display("turntable");
